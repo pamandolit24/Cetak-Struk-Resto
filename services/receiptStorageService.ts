@@ -1,7 +1,8 @@
-import { ReceiptData, ReceiptTemplate } from '../types';
+import { ReceiptData, ReceiptTemplate, ProductTemplate } from '../types';
 
 const STORAGE_KEY = 'savedReceipts';
 const TEMPLATE_STORAGE_KEY = 'savedReceiptTemplates';
+const PRODUCT_STORAGE_KEY = 'savedProducts';
 
 /**
  * Saves a receipt to local storage. Always creates a new entry with a unique ID
@@ -98,5 +99,51 @@ export const deleteReceiptTemplate = (id: string): ReceiptTemplate[] => {
     } catch (error) {
         console.error("Failed to delete template from localStorage", error);
         return loadReceiptTemplates();
+    }
+};
+
+/**
+ * Saves a product to local storage.
+ * @param product The product data to save, excluding the ID.
+ */
+export const saveProduct = (product: Omit<ProductTemplate, 'id'>): void => {
+    try {
+        const products = loadProducts();
+        const newProduct = { ...product, id: `product-${Date.now()}` };
+        products.unshift(newProduct);
+        localStorage.setItem(PRODUCT_STORAGE_KEY, JSON.stringify(products));
+    } catch (error) {
+        console.error("Failed to save product to localStorage", error);
+    }
+};
+
+/**
+ * Loads all saved products from local storage.
+ * @returns An array of saved ProductTemplate objects.
+ */
+export const loadProducts = (): ProductTemplate[] => {
+    try {
+        const savedData = localStorage.getItem(PRODUCT_STORAGE_KEY);
+        return savedData ? JSON.parse(savedData) : [];
+    } catch (error) {
+        console.error("Failed to load products from localStorage", error);
+        return [];
+    }
+};
+
+/**
+ * Deletes a product from local storage by its ID.
+ * @param id The unique ID of the product to delete.
+ * @returns The updated array of products after deletion.
+ */
+export const deleteProduct = (id: string): ProductTemplate[] => {
+    try {
+        let products = loadProducts();
+        products = products.filter(p => p.id !== id);
+        localStorage.setItem(PRODUCT_STORAGE_KEY, JSON.stringify(products));
+        return products;
+    } catch (error) {
+        console.error("Failed to delete product from localStorage", error);
+        return loadProducts();
     }
 };

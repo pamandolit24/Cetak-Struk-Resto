@@ -40,3 +40,9 @@ export interface ReceiptTemplate {
   phone?: string;
   footerMessage?: string;
 }
+
+export interface ProductTemplate {
+  id: string;
+  name: string;
+  unitPrice: number;
+}

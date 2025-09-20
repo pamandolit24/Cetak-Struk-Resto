@@ -3,13 +3,14 @@ import { ReceiptData, ReceiptItem, PaymentType } from '../types';
 import ReceiptItemRow from './ReceiptItemRow';
 import BillSummary from './BillSummary';
 import PrintButton from './PrintButton';
-import { EditIcon, LoadingSpinnerIcon, SaveIcon } from './icons';
+import { EditIcon, LoadingSpinnerIcon, SaveIcon, CubeIcon } from './icons';
 
 interface ReceiptEditorProps {
   receiptData: ReceiptData | null;
   onDataChange: (data: ReceiptData) => void;
   onSave: (data: ReceiptData) => void;
   onSaveAsTemplate: () => void;
+  onOpenProductModal: () => void;
   isLoading: boolean;
 }
 
@@ -17,7 +18,7 @@ const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('id-ID').format(amount);
 };
 
-const ReceiptEditor: React.FC<ReceiptEditorProps> = ({ receiptData, onDataChange, onSave, onSaveAsTemplate, isLoading }) => {
+const ReceiptEditor: React.FC<ReceiptEditorProps> = ({ receiptData, onDataChange, onSave, onSaveAsTemplate, onOpenProductModal, isLoading }) => {
     const [internalData, setInternalData] = useState<ReceiptData | null>(receiptData);
     const [saveStatus, setSaveStatus] = useState<string>('');
 
@@ -187,11 +188,18 @@ const ReceiptEditor: React.FC<ReceiptEditorProps> = ({ receiptData, onDataChange
                     />
                 ))}
                 </div>
-                <button 
-                    onClick={handleAddItem}
-                    className="w-full mt-2 text-sm text-cyan-400 hover:text-cyan-300 bg-slate-700/50 hover:bg-slate-700 rounded-md py-2 transition-colors">
-                    + Add Item
-                </button>
+                <div className="flex gap-2 mt-2">
+                    <button 
+                        onClick={handleAddItem}
+                        className="flex-grow text-sm text-cyan-400 hover:text-cyan-300 bg-slate-700/50 hover:bg-slate-700 rounded-md py-2 transition-colors">
+                        + Add Item
+                    </button>
+                    <button 
+                        onClick={onOpenProductModal}
+                        className="flex-shrink-0 flex items-center gap-2 px-4 text-sm text-cyan-400 hover:text-cyan-300 bg-slate-700/50 hover:bg-slate-700 rounded-md py-2 transition-colors">
+                        <CubeIcon className="w-4 h-4" /> Load Product
+                    </button>
+                </div>
 
                 <div className="border-t border-slate-700"></div>
 

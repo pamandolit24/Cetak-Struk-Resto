@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { ReceiptData, ReceiptTemplate } from './types';
+import { ReceiptData, ReceiptItem, ReceiptTemplate, ProductTemplate } from './types';
 import { parseReceipt } from './services/geminiService';
 import * as receiptStorage from './services/receiptStorageService';
 import ImageUploader from './components/ImageUploader';
@@ -7,6 +7,7 @@ import ReceiptEditor from './components/ReceiptEditor';
 import LoadReceiptModal from './components/LoadReceiptModal';
 import LoadTemplateModal from './components/LoadTemplateModal';
 import SaveTemplateModal from './components/SaveTemplateModal';
+import ProductModal from './components/ProductModal';
 import { ReceiptIcon, ZapIcon, FolderIcon } from './components/icons';
 
 const App: React.FC = () => {
@@ -21,11 +22,15 @@ const App: React.FC = () => {
   const [savedTemplates, setSavedTemplates] = useState<ReceiptTemplate[]>([]);
   const [isLoadTemplateModalOpen, setIsLoadTemplateModalOpen] = useState<boolean>(false);
   const [isSaveTemplateModalOpen, setIsSaveTemplateModalOpen] = useState<boolean>(false);
+  
+  const [savedProducts, setSavedProducts] = useState<ProductTemplate[]>([]);
+  const [isProductModalOpen, setIsProductModalOpen] = useState<boolean>(false);
 
 
   useEffect(() => {
     setSavedReceipts(receiptStorage.loadReceipts());
     setSavedTemplates(receiptStorage.loadReceiptTemplates());
+    setSavedProducts(receiptStorage.loadProducts());
   }, []);
 
   const handleImageUpload = useCallback(async (file: File) => {
@@ -134,6 +139,44 @@ const App: React.FC = () => {
     setSavedTemplates(updatedTemplates);
   }, []);
 
+  const handleSaveProduct = useCallback((productData: Omit<ProductTemplate, 'id'>) => {
+    receiptStorage.saveProduct(productData);
+    setSavedProducts(receiptStorage.loadProducts());
+  }, []);
+
+  const handleDeleteProduct = useCallback((id: string) => {
+      const updatedProducts = receiptStorage.deleteProduct(id);
+      setSavedProducts(updatedProducts);
+  }, []);
+
+  const handleAddProductToReceipt = useCallback((product: ProductTemplate) => {
+      if (!receiptData) return;
+
+      const newItem: ReceiptItem = {
+          name: product.name,
+          quantity: 1,
+          unitPrice: product.unitPrice,
+      };
+
+      const newItems = [...receiptData.items, newItem];
+
+      const subtotal = newItems.reduce((acc, item) => acc + item.quantity * item.unitPrice, 0);
+      const taxRate = receiptData.subtotal > 0 ? receiptData.tax / receiptData.subtotal : 0.1;
+      const tax = subtotal * taxRate;
+      const total = subtotal + tax;
+      
+      const newData: ReceiptData = {
+          ...receiptData,
+          items: newItems,
+          subtotal,
+          tax,
+          total,
+      };
+
+      setReceiptData(newData);
+      setIsProductModalOpen(false);
+  }, [receiptData]);
+
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100 font-sans">
       <header className="bg-slate-900/70 backdrop-blur-lg border-b border-slate-700 sticky top-0 z-10">
@@ -189,6 +232,7 @@ const App: React.FC = () => {
               onDataChange={handleDataChange}
               onSave={handleSaveReceipt}
               onSaveAsTemplate={() => setIsSaveTemplateModalOpen(true)}
+              onOpenProductModal={() => setIsProductModalOpen(true)}
               isLoading={isLoading}
             />
           </div>
@@ -213,6 +257,14 @@ const App: React.FC = () => {
         receipts={savedReceipts}
         onLoad={handleLoadReceipt}
         onDelete={handleDeleteReceipt}
+      />
+      <ProductModal
+        isOpen={isProductModalOpen}
+        onClose={() => setIsProductModalOpen(false)}
+        products={savedProducts}
+        onSave={handleSaveProduct}
+        onLoad={handleAddProductToReceipt}
+        onDelete={handleDeleteProduct}
       />
     </div>
   );

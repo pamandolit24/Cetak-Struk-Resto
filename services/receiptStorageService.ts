@@ -3,21 +3,18 @@ import { ReceiptData } from '../types';
 const STORAGE_KEY = 'savedReceipts';
 
 /**
- * Saves a receipt to local storage. Updates an existing receipt if the ID matches,
- * otherwise adds it as a new entry.
+ * Saves a receipt to local storage. Always creates a new entry with a unique ID
+ * to prevent overwriting existing receipts.
  * @param receipt The receipt data to save.
  */
 export const saveReceipt = (receipt: ReceiptData): void => {
     try {
         const receipts = loadReceipts();
-        const existingIndex = receipts.findIndex(r => r.id === receipt.id);
+        
+        // To prevent overwriting, create a new receipt object with a new unique ID for every save.
+        const newReceipt = { ...receipt, id: `receipt-${Date.now()}` };
 
-        if (existingIndex > -1) {
-            receipts[existingIndex] = receipt;
-        } else {
-            receipt.id = `receipt-${Date.now()}`; // Assign a simple unique ID
-            receipts.unshift(receipt); // Add new receipts to the top of the list
-        }
+        receipts.unshift(newReceipt); // Add the new receipt to the top of the list
         
         localStorage.setItem(STORAGE_KEY, JSON.stringify(receipts));
     } catch (error) {

@@ -1,5 +1,5 @@
 {
-  "name": "Copy of Receipt Parser & Bluetooth POS Printer",
+  "name": "Receipt Parser & Bluetooth POS Printer",
   "description": "An intelligent restaurant cashier application that uses AI to parse receipt images and prints formatted bills via a Bluetooth thermal printer.",
   "requestFramePermissions": [
     "bluetooth"

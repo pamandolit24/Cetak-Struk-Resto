@@ -1,5 +1,5 @@
 {
-  "name": "copy-of-receipt-parser-&-bluetooth-pos-printer",
+  "name": "receipt-parser-&-bluetooth-pos-printer",
   "private": true,
   "version": "0.0.0",
   "type": "module",

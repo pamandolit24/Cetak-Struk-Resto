@@ -85,6 +85,21 @@ const generatePrintCommands = (receiptData: ReceiptData): string => {
     commands += `${formatLine('TOTAL', formatCurrency(receiptData.total))}\n`;
     commands += COMMANDS.TXT_BOLD_OFF;
 
+    // Payment Details
+    commands += `--------------------------------\n`;
+    if (receiptData.paymentType) {
+        commands += COMMANDS.TXT_ALIGN_R;
+        commands += `${formatLine('PEMBAYARAN', receiptData.paymentType.toUpperCase())}\n`;
+        if (receiptData.paymentType === 'Tunai' && typeof receiptData.paymentAmount === 'number') {
+            commands += `${formatLine('TUNAI', formatCurrency(receiptData.paymentAmount))}\n`;
+            commands += `${formatLine('KEMBALI', formatCurrency(receiptData.paymentChange || 0))}\n`;
+        }
+    }
+    
+    commands += COMMANDS.TXT_ALIGN_C;
+    commands += `\n--- LUNAS ---\n`;
+    
+
     // Footer
     commands += `\n\n`;
     commands += COMMANDS.TXT_ALIGN_C;

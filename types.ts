@@ -4,6 +4,8 @@ export interface ReceiptItem {
   unitPrice: number;
 }
 
+export type PaymentType = 'Tunai' | 'Debit' | 'QRIS';
+
 export interface ReceiptData {
   id?: string;
   // Header
@@ -23,4 +25,8 @@ export interface ReceiptData {
   total: number;
   // Footer
   footerMessage?: string;
+  // Payment
+  paymentType?: PaymentType;
+  paymentAmount?: number;
+  paymentChange?: number;
 }

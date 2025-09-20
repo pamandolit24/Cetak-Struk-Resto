@@ -45,6 +45,7 @@ const App: React.FC = () => {
             customerName: '',
             footerMessage: 'Thank you for your visit!',
             ...parsedData,
+            paymentType: 'Tunai', // Default payment type
         };
         setReceiptData(fullData);
       } catch (e) {

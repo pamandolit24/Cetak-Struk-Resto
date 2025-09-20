@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ReceiptData, ReceiptItem } from '../types';
+import { ReceiptData, ReceiptItem, PaymentType } from '../types';
 import ReceiptItemRow from './ReceiptItemRow';
 import BillSummary from './BillSummary';
 import PrintButton from './PrintButton';
@@ -12,6 +12,10 @@ interface ReceiptEditorProps {
   isLoading: boolean;
 }
 
+const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('id-ID').format(amount);
+};
+
 const ReceiptEditor: React.FC<ReceiptEditorProps> = ({ receiptData, onDataChange, onSave, isLoading }) => {
     const [internalData, setInternalData] = useState<ReceiptData | null>(receiptData);
     const [saveStatus, setSaveStatus] = useState<string>('');
@@ -23,6 +27,26 @@ const ReceiptEditor: React.FC<ReceiptEditorProps> = ({ receiptData, onDataChange
     const handleFieldChange = (field: keyof ReceiptData, value: string) => {
         if (!internalData) return;
         const newData = { ...internalData, [field]: value };
+        setInternalData(newData);
+        onDataChange(newData);
+    };
+
+    const handlePaymentChange = (field: keyof ReceiptData, value: string | number) => {
+        if (!internalData) return;
+        
+        let newData: ReceiptData = { ...internalData, [field]: value };
+
+        if (field === 'paymentAmount') {
+            const amountPaid = Number(value) || 0;
+            const change = amountPaid > internalData.total ? amountPaid - internalData.total : 0;
+            newData = { ...newData, paymentAmount: amountPaid, paymentChange: change };
+        }
+        
+        if (field === 'paymentType' && value !== 'Tunai') {
+            delete newData.paymentAmount;
+            delete newData.paymentChange;
+        }
+
         setInternalData(newData);
         onDataChange(newData);
     };
@@ -183,6 +207,45 @@ const ReceiptEditor: React.FC<ReceiptEditorProps> = ({ receiptData, onDataChange
             
             <div className="p-6 border-t border-slate-700 bg-slate-900/50 rounded-b-xl">
               <BillSummary receiptData={internalData} />
+              
+              <div className="my-6 space-y-4">
+                  <h3 className="text-sm font-semibold text-slate-300">Payment Method</h3>
+                  <div>
+                      <label htmlFor="paymentType" className={labelClasses}>Type</label>
+                      <select
+                          id="paymentType"
+                          value={internalData.paymentType || 'Tunai'}
+                          onChange={(e) => handlePaymentChange('paymentType', e.target.value as PaymentType)}
+                          className={commonInputClasses}
+                      >
+                          <option value="Tunai">Tunai</option>
+                          <option value="Debit">Debit</option>
+                          <option value="QRIS">QRIS</option>
+                      </select>
+                  </div>
+                  {internalData.paymentType === 'Tunai' && (
+                      <>
+                          <div>
+                              <label htmlFor="paymentAmount" className={labelClasses}>Amount Paid</label>
+                              <input
+                                  id="paymentAmount"
+                                  type="number"
+                                  value={internalData.paymentAmount || ''}
+                                  onChange={(e) => handlePaymentChange('paymentAmount', e.target.valueAsNumber)}
+                                  className={commonInputClasses}
+                                  placeholder="Enter amount paid"
+                              />
+                          </div>
+                          <div className="flex justify-between items-center border-t border-slate-700 pt-3 mt-3">
+                              <span className="text-md font-medium text-slate-400">Change</span>
+                              <span className="text-lg font-bold text-green-400">
+                                  {formatCurrency((internalData.paymentChange || 0))}
+                              </span>
+                          </div>
+                      </>
+                  )}
+              </div>
+
               <div className="space-y-3">
                  <button
                     onClick={handleSave}

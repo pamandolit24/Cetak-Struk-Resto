@@ -30,3 +30,13 @@ export interface ReceiptData {
   paymentAmount?: number;
   paymentChange?: number;
 }
+
+export interface ReceiptTemplate {
+  id: string;
+  templateName: string;
+  restaurantName?: string;
+  address?: string;
+  city?: string;
+  phone?: string;
+  footerMessage?: string;
+}

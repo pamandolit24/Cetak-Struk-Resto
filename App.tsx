@@ -1,10 +1,12 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { ReceiptData } from './types';
+import { ReceiptData, ReceiptTemplate } from './types';
 import { parseReceipt } from './services/geminiService';
 import * as receiptStorage from './services/receiptStorageService';
 import ImageUploader from './components/ImageUploader';
 import ReceiptEditor from './components/ReceiptEditor';
 import LoadReceiptModal from './components/LoadReceiptModal';
+import LoadTemplateModal from './components/LoadTemplateModal';
+import SaveTemplateModal from './components/SaveTemplateModal';
 import { ReceiptIcon, ZapIcon, FolderIcon } from './components/icons';
 
 const App: React.FC = () => {
@@ -16,8 +18,14 @@ const App: React.FC = () => {
   const [savedReceipts, setSavedReceipts] = useState<ReceiptData[]>([]);
   const [isLoadModalOpen, setIsLoadModalOpen] = useState<boolean>(false);
 
+  const [savedTemplates, setSavedTemplates] = useState<ReceiptTemplate[]>([]);
+  const [isLoadTemplateModalOpen, setIsLoadTemplateModalOpen] = useState<boolean>(false);
+  const [isSaveTemplateModalOpen, setIsSaveTemplateModalOpen] = useState<boolean>(false);
+
+
   useEffect(() => {
     setSavedReceipts(receiptStorage.loadReceipts());
+    setSavedTemplates(receiptStorage.loadReceiptTemplates());
   }, []);
 
   const handleImageUpload = useCallback(async (file: File) => {
@@ -82,6 +90,49 @@ const App: React.FC = () => {
     setSavedReceipts(updatedReceipts);
   }, []);
 
+  const handleSaveTemplate = useCallback((templateName: string) => {
+    if (!receiptData) return;
+
+    const templateData: Omit<ReceiptTemplate, 'id'> = {
+        templateName,
+        restaurantName: receiptData.restaurantName,
+        address: receiptData.address,
+        city: receiptData.city,
+        phone: receiptData.phone,
+        footerMessage: receiptData.footerMessage,
+    };
+
+    receiptStorage.saveReceiptTemplate(templateData);
+    setSavedTemplates(receiptStorage.loadReceiptTemplates());
+    setIsSaveTemplateModalOpen(false);
+  }, [receiptData]);
+
+  const handleLoadTemplate = useCallback((template: ReceiptTemplate) => {
+    const emptyReceipt: ReceiptData = {
+        items: [],
+        subtotal: 0,
+        tax: 0,
+        total: 0,
+        date: new Date().toLocaleDateString('id-ID'),
+        transactionId: `TRX-${Date.now().toString().slice(-6)}`,
+        paymentType: 'Tunai',
+    };
+      
+    setReceiptData(prevData => ({
+        ...(prevData || emptyReceipt),
+        restaurantName: template.restaurantName,
+        address: template.address,
+        city: template.city,
+        phone: template.phone,
+        footerMessage: template.footerMessage,
+    }));
+    setIsLoadTemplateModalOpen(false);
+  }, []);
+
+  const handleDeleteTemplate = useCallback((id: string) => {
+    const updatedTemplates = receiptStorage.deleteReceiptTemplate(id);
+    setSavedTemplates(updatedTemplates);
+  }, []);
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100 font-sans">
@@ -94,7 +145,14 @@ const App: React.FC = () => {
                 AI Receipt Parser & POS Printer
               </h1>
             </div>
-             <div>
+             <div className="flex items-center gap-3">
+                <button 
+                    onClick={() => setIsLoadTemplateModalOpen(true)}
+                    className="flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-slate-700 text-slate-200 rounded-lg hover:bg-slate-600 transition-colors"
+                >
+                    <FolderIcon className="w-5 h-5" />
+                    <span>Load Template</span>
+                </button>
                 <button 
                     onClick={() => setIsLoadModalOpen(true)}
                     className="flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-slate-700 text-slate-200 rounded-lg hover:bg-slate-600 transition-colors"
@@ -130,12 +188,25 @@ const App: React.FC = () => {
               receiptData={receiptData} 
               onDataChange={handleDataChange}
               onSave={handleSaveReceipt}
+              onSaveAsTemplate={() => setIsSaveTemplateModalOpen(true)}
               isLoading={isLoading}
             />
           </div>
         </div>
       </main>
 
+      <SaveTemplateModal
+        isOpen={isSaveTemplateModalOpen}
+        onClose={() => setIsSaveTemplateModalOpen(false)}
+        onSave={handleSaveTemplate}
+      />
+      <LoadTemplateModal
+        isOpen={isLoadTemplateModalOpen}
+        onClose={() => setIsLoadTemplateModalOpen(false)}
+        templates={savedTemplates}
+        onLoad={handleLoadTemplate}
+        onDelete={handleDeleteTemplate}
+      />
       <LoadReceiptModal 
         isOpen={isLoadModalOpen}
         onClose={() => setIsLoadModalOpen(false)}

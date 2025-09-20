@@ -1,6 +1,7 @@
-import { ReceiptData } from '../types';
+import { ReceiptData, ReceiptTemplate } from '../types';
 
 const STORAGE_KEY = 'savedReceipts';
+const TEMPLATE_STORAGE_KEY = 'savedReceiptTemplates';
 
 /**
  * Saves a receipt to local storage. Always creates a new entry with a unique ID
@@ -50,5 +51,52 @@ export const deleteReceipt = (id: string): ReceiptData[] => {
     } catch (error) {
         console.error("Failed to delete receipt from localStorage", error);
         return loadReceipts(); // Return original list on failure
+    }
+};
+
+
+/**
+ * Saves a receipt template to local storage.
+ * @param template The template data to save, excluding the ID.
+ */
+export const saveReceiptTemplate = (template: Omit<ReceiptTemplate, 'id'>): void => {
+    try {
+        const templates = loadReceiptTemplates();
+        const newTemplate = { ...template, id: `template-${Date.now()}` };
+        templates.unshift(newTemplate);
+        localStorage.setItem(TEMPLATE_STORAGE_KEY, JSON.stringify(templates));
+    } catch (error) {
+        console.error("Failed to save template to localStorage", error);
+    }
+};
+
+/**
+ * Loads all saved receipt templates from local storage.
+ * @returns An array of saved ReceiptTemplate objects.
+ */
+export const loadReceiptTemplates = (): ReceiptTemplate[] => {
+    try {
+        const savedData = localStorage.getItem(TEMPLATE_STORAGE_KEY);
+        return savedData ? JSON.parse(savedData) : [];
+    } catch (error) {
+        console.error("Failed to load templates from localStorage", error);
+        return [];
+    }
+};
+
+/**
+ * Deletes a receipt template from local storage by its ID.
+ * @param id The unique ID of the template to delete.
+ * @returns The updated array of templates after deletion.
+ */
+export const deleteReceiptTemplate = (id: string): ReceiptTemplate[] => {
+    try {
+        let templates = loadReceiptTemplates();
+        templates = templates.filter(t => t.id !== id);
+        localStorage.setItem(TEMPLATE_STORAGE_KEY, JSON.stringify(templates));
+        return templates;
+    } catch (error) {
+        console.error("Failed to delete template from localStorage", error);
+        return loadReceiptTemplates();
     }
 };

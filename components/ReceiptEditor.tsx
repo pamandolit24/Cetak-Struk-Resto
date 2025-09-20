@@ -9,6 +9,7 @@ interface ReceiptEditorProps {
   receiptData: ReceiptData | null;
   onDataChange: (data: ReceiptData) => void;
   onSave: (data: ReceiptData) => void;
+  onSaveAsTemplate: () => void;
   isLoading: boolean;
 }
 
@@ -16,7 +17,7 @@ const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('id-ID').format(amount);
 };
 
-const ReceiptEditor: React.FC<ReceiptEditorProps> = ({ receiptData, onDataChange, onSave, isLoading }) => {
+const ReceiptEditor: React.FC<ReceiptEditorProps> = ({ receiptData, onDataChange, onSave, onSaveAsTemplate, isLoading }) => {
     const [internalData, setInternalData] = useState<ReceiptData | null>(receiptData);
     const [saveStatus, setSaveStatus] = useState<string>('');
 
@@ -247,13 +248,23 @@ const ReceiptEditor: React.FC<ReceiptEditorProps> = ({ receiptData, onDataChange
               </div>
 
               <div className="space-y-3">
-                 <button
-                    onClick={handleSave}
-                    className="w-full flex items-center justify-center gap-3 px-6 py-2 font-semibold text-cyan-200 bg-slate-700 rounded-lg hover:bg-slate-600 transition-colors"
-                >
-                    <SaveIcon className="w-5 h-5" />
-                    <span>Save Receipt</span>
-                </button>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <button
+                        onClick={handleSave}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2 font-semibold text-cyan-200 bg-slate-700 rounded-lg hover:bg-slate-600 transition-colors"
+                    >
+                        <SaveIcon className="w-5 h-5" />
+                        <span>Save Receipt</span>
+                    </button>
+                    <button
+                        onClick={onSaveAsTemplate}
+                        disabled={!internalData}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2 font-semibold text-slate-200 bg-slate-700 rounded-lg hover:bg-slate-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        <SaveIcon className="w-5 h-5" />
+                        <span>Save as Template</span>
+                    </button>
+                </div>
                 <PrintButton receiptData={internalData} />
               </div>
                {saveStatus && (

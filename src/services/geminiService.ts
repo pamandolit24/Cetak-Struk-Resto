@@ -3,11 +3,9 @@ import { ReceiptData } from '../types';
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
-if (!API_KEY) {
-    throw new Error("VITE_API_KEY environment variable is not set. For local development, please create a .env file in the root and add VITE_API_KEY=<your_api_key>.");
-}
+export const isApiKeySet = !!API_KEY;
 
-const ai = new GoogleGenAI({ apiKey: API_KEY });
+const ai = isApiKeySet ? new GoogleGenAI({ apiKey: API_KEY }) : null;
 
 const responseSchema = {
     type: Type.OBJECT,
@@ -76,6 +74,10 @@ const responseSchema = {
 
 
 export const parseReceipt = async (base64Image: string, mimeType: string): Promise<ReceiptData> => {
+    
+    if (!ai) {
+        throw new Error("Gemini API client is not initialized. Please set VITE_API_KEY.");
+    }
     
     const imagePart = {
         inlineData: {

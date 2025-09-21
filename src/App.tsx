@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { ReceiptData, ReceiptItem, ReceiptTemplate, ProductTemplate } from './types';
-import { parseReceipt } from './services/geminiService';
+import { parseReceipt, isApiKeySet } from './services/geminiService';
 import * as receiptStorage from './services/receiptStorageService';
 import ImageUploader from './components/ImageUploader';
 import ReceiptEditor from './components/ReceiptEditor';
@@ -63,7 +63,7 @@ const App: React.FC = () => {
         setReceiptData(fullData);
       } catch (e) {
         console.error(e);
-        setError('Failed to parse receipt. Please try another image.');
+        setError(`Failed to parse receipt: ${(e as Error).message}. Please try another image or check the API key.`);
       } finally {
         setIsLoading(false);
       }
@@ -176,6 +176,22 @@ const App: React.FC = () => {
       setReceiptData(newData);
       setIsProductModalOpen(false);
   }, [receiptData]);
+
+  if (!isApiKeySet) {
+    return (
+      <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col items-center justify-center p-4">
+        <div className="text-center bg-red-900/50 border border-red-700 p-8 rounded-lg max-w-2xl">
+          <h1 className="text-2xl font-bold text-red-300 mb-4">Application Configuration Error</h1>
+          <p className="text-slate-300">
+            The AI service is not configured correctly. The application cannot function without a valid API key.
+          </p>
+          <p className="mt-2 text-slate-400 text-sm">
+            If you are the administrator, please set the <code className="bg-slate-700 p-1 rounded">VITE_API_KEY</code> environment variable in your Vercel project settings and redeploy the application.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100 font-sans">

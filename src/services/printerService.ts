@@ -114,70 +114,128 @@ const generatePrintCommands = (receiptData: ReceiptData): string => {
     return commands;
 };
 
+/**
+ * Attempts to connect to a Bluetooth device's GATT server with a retry mechanism.
+ */
+const connectWithRetry = async (
+    // FIX: Cannot find name 'BluetoothDevice'. Replaced with 'any'.
+    device: any, 
+    updateStatus: (message: string) => void,
+    retries = 3, 
+    delay = 1000
+// FIX: Cannot find name 'BluetoothRemoteGATTServer'. Replaced with 'any'.
+): Promise<any> => {
+    let lastError: Error | undefined;
+    for (let i = 0; i < retries; i++) {
+        try {
+            if (i > 0) {
+                updateStatus(`Connection failed. Retrying... (${i}/${retries})`);
+                await new Promise(resolve => setTimeout(resolve, delay * i));
+            }
+            const server = await device.gatt!.connect();
+            return server;
+        } catch (error) {
+            lastError = error as Error;
+            console.warn(`GATT connection attempt ${i + 1} failed.`, error);
+        }
+    }
+    throw new Error(`Connection attempt failed after ${retries} retries. Please ensure the printer is on and in range. Error: ${lastError?.message}`);
+};
+
 
 export const connectAndPrint = async (receiptData: ReceiptData, updateStatus: (message: string) => void): Promise<void> => {
-    // FIX: Property 'bluetooth' does not exist on type 'Navigator'. Cast to 'any' to access Web Bluetooth API.
     if (!(navigator as any).bluetooth) {
-        throw new Error('Web Bluetooth API is not available on this browser.');
+        throw new Error('Web Bluetooth API is not available on this browser. Please use a supported browser like Chrome on Desktop or Android.');
     }
     
-    updateStatus('Requesting Bluetooth device...');
-    // FIX: Property 'bluetooth' does not exist on type 'Navigator'. Cast to 'any' to access Web Bluetooth API.
-    const device = await (navigator as any).bluetooth.requestDevice({
-        acceptAllDevices: true,
-        optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb'] // Generic Attribute Profile (common for printers)
-    });
+    updateStatus('Please select your printer from the pop-up. Make sure Bluetooth is on.');
+    
+    let device: any;
+    try {
+        device = await (navigator as any).bluetooth.requestDevice({
+            acceptAllDevices: true,
+            optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb'] // Generic service for many printers
+        });
+    } catch (error) {
+        const errorMessage = (error as Error).message;
+        // FIX: Provide a user-friendly message when the device chooser is cancelled.
+        if (errorMessage.includes('cancelled') || errorMessage.includes('chooser')) {
+            throw new Error('Printing cancelled. You need to select a printer to continue.');
+        }
+        // Re-throw other potential errors from requestDevice
+        throw error;
+    }
+
+    if (!device) {
+        throw new Error('No Bluetooth device was selected.');
+    }
 
     if (!device.gatt) {
         throw new Error('GATT Server not available on this device.');
     }
 
-    updateStatus('Connecting to GATT Server...');
-    const server = await device.gatt.connect();
+    const onDisconnected = () => {
+        // This can be used to update UI state if needed in the future.
+        console.log(`Device ${device.name} disconnected.`);
+    };
+    device.addEventListener('gattserverdisconnected', onDisconnected);
 
-    updateStatus('Getting Primary Service...');
-    // Standard service for serial port emulation over BLE
-    const services = await server.getPrimaryServices();
-    // A common service UUID for serial port emulation used by many thermal printers
-    const sppServiceUUID = '000018f0-0000-1000-8000-00805f9b34fb'; 
-    let service = services.find(s => s.uuid.includes('18f0'));
+    try {
+        updateStatus(`Connecting to ${device.name || 'device'}...`);
+        const server = await connectWithRetry(device, updateStatus);
 
-    if(!service) {
-      // Fallback to trying all services if the standard one is not found
-      for(const s of services) {
-        try {
-          const characteristics = await s.getCharacteristics();
-          if (characteristics.some(c => c.properties.write || c.properties.writeWithoutResponse)) {
-            service = s;
-            break;
+        updateStatus('Getting Primary Service...');
+        const services = await server.getPrimaryServices();
+        let service = services.find(s => s.uuid.includes('18f0'));
+
+        if(!service) {
+          // Fallback to trying all services and finding one with a writable characteristic
+          updateStatus('Standard service not found. Searching all services...');
+          for(const s of services) {
+            try {
+              const characteristics = await s.getCharacteristics();
+              if (characteristics.some(c => c.properties.write || c.properties.writeWithoutResponse)) {
+                service = s;
+                break;
+              }
+            } catch(e) { 
+                console.warn(`Could not get characteristics for service ${s.uuid}`, e);
+            }
           }
-        } catch(e) { /* ignore services we can't access */ }
-      }
+        }
+
+        if (!service) {
+          throw new Error('Could not find a suitable printer service on the device.');
+        }
+
+        updateStatus('Getting Characteristic...');
+        const characteristics = await service.getCharacteristics();
+        const characteristic = characteristics.find(c => c.properties.write || c.properties.writeWithoutResponse);
+
+        if (!characteristic) {
+            throw new Error('Could not find a writable characteristic on the service.');
+        }
+
+        const commands = generatePrintCommands(receiptData);
+        const dataToSend = textEncoder.encode(commands);
+
+        updateStatus('Sending data to printer...');
+        const chunkSize = 512; // BLE 5 can handle up to 512 bytes
+        for (let i = 0; i < dataToSend.length; i += chunkSize) {
+            const chunk = dataToSend.slice(i, i + chunkSize);
+            await characteristic.writeValueWithoutResponse(chunk);
+        }
+
+        updateStatus('Printing complete.');
+
+    } catch(error) {
+        // Re-throw the error to be handled by the UI component
+        throw error;
+    } finally {
+        if (device.gatt?.connected) {
+            updateStatus('Disconnecting from printer...');
+            device.gatt.disconnect();
+        }
+        device.removeEventListener('gattserverdisconnected', onDisconnected);
     }
-
-    if (!service) {
-      throw new Error('Could not find a suitable service on the device.');
-    }
-
-    updateStatus('Getting Characteristic...');
-    const characteristics = await service.getCharacteristics();
-    const characteristic = characteristics.find(c => c.properties.write || c.properties.writeWithoutResponse);
-
-    if (!characteristic) {
-        throw new Error('Could not find a writable characteristic.');
-    }
-
-    const commands = generatePrintCommands(receiptData);
-    const dataToSend = textEncoder.encode(commands);
-
-    updateStatus('Sending data to printer...');
-    // Some printers have small buffers, send in chunks
-    const chunkSize = 512; // BLE 5 can handle up to 512 bytes
-    for (let i = 0; i < dataToSend.length; i += chunkSize) {
-        const chunk = dataToSend.slice(i, i + chunkSize);
-        await characteristic.writeValueWithoutResponse(chunk);
-    }
-
-    updateStatus('Printing complete. Disconnecting...');
-    server.disconnect();
 };

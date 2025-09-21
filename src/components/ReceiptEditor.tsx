@@ -39,12 +39,17 @@ const ReceiptEditor: React.FC<ReceiptEditorProps> = ({ receiptData, onDataChange
         let newData: ReceiptData = { ...internalData, [field]: value };
 
         if (field === 'paymentAmount') {
-            const amountPaid = Number(value) || 0;
-            const change = amountPaid > internalData.total ? amountPaid - internalData.total : 0;
+            const rawValue = value as number;
+            // If the value from the input is NaN (e.g., it's empty), store `undefined`.
+            // Otherwise, store the number. This allows our validation to correctly detect an empty input.
+            const amountPaid = isNaN(rawValue) ? undefined : rawValue;
+            
+            const change = (amountPaid ?? 0) > internalData.total ? (amountPaid ?? 0) - internalData.total : 0;
             newData = { ...newData, paymentAmount: amountPaid, paymentChange: change };
         }
         
         if (field === 'paymentType' && value !== 'Tunai') {
+             // If payment type is changed to something other than cash, clear the cash-specific fields.
             delete newData.paymentAmount;
             delete newData.paymentChange;
         }
@@ -85,6 +90,13 @@ const ReceiptEditor: React.FC<ReceiptEditorProps> = ({ receiptData, onDataChange
             tax,
             total,
         };
+        
+        // After recalculating total, re-evaluate payment change
+        if (newData.paymentType === 'Tunai' && typeof newData.paymentAmount === 'number') {
+            const change = newData.paymentAmount > total ? newData.paymentAmount - total : 0;
+            newData.paymentChange = change;
+        }
+
         setInternalData(newData);
         onDataChange(newData);
     };
@@ -99,6 +111,10 @@ const ReceiptEditor: React.FC<ReceiptEditorProps> = ({ receiptData, onDataChange
 
     const commonInputClasses = "bg-slate-700/50 border border-slate-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 transition-colors w-full px-3 py-2 text-sm";
     const labelClasses = "block text-xs font-medium text-slate-400 mb-1";
+
+    const isCashPayment = internalData?.paymentType === 'Tunai';
+    const isPaymentAmountInvalid = isCashPayment && (internalData.paymentAmount === undefined || internalData.paymentAmount === null || internalData.paymentAmount < (internalData.total || 0));
+
 
   return (
     <div className="bg-slate-800/50 rounded-xl shadow-lg h-full flex flex-col">
@@ -239,11 +255,16 @@ const ReceiptEditor: React.FC<ReceiptEditorProps> = ({ receiptData, onDataChange
                               <input
                                   id="paymentAmount"
                                   type="number"
-                                  value={internalData.paymentAmount || ''}
+                                  value={internalData.paymentAmount ?? ''}
                                   onChange={(e) => handlePaymentChange('paymentAmount', e.target.valueAsNumber)}
-                                  className={commonInputClasses}
+                                  className={`${commonInputClasses} ${isPaymentAmountInvalid ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
                                   placeholder="Enter amount paid"
                               />
+                              {isPaymentAmountInvalid && (
+                                <p className="mt-1 text-xs text-red-400">
+                                    Amount must be equal to or greater than the total bill.
+                                </p>
+                              )}
                           </div>
                           <div className="flex justify-between items-center border-t border-slate-700 pt-3 mt-3">
                               <span className="text-md font-medium text-slate-400">Change</span>
@@ -273,7 +294,7 @@ const ReceiptEditor: React.FC<ReceiptEditorProps> = ({ receiptData, onDataChange
                         <span>Save as Template</span>
                     </button>
                 </div>
-                <PrintButton receiptData={internalData} />
+                <PrintButton receiptData={internalData} disabled={isPaymentAmountInvalid} />
               </div>
                {saveStatus && (
                 <p className="mt-3 text-sm text-center text-green-400">

@@ -5,9 +5,10 @@ import { PrintIcon, LoadingSpinnerIcon } from './icons';
 
 interface PrintButtonProps {
   receiptData: ReceiptData;
+  disabled?: boolean;
 }
 
-const PrintButton: React.FC<PrintButtonProps> = ({ receiptData }) => {
+const PrintButton: React.FC<PrintButtonProps> = ({ receiptData, disabled }) => {
   const [isPrinting, setIsPrinting] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
   const [isError, setIsError] = useState(false);
@@ -34,7 +35,7 @@ const PrintButton: React.FC<PrintButtonProps> = ({ receiptData }) => {
     <div>
       <button
         onClick={handlePrint}
-        disabled={isPrinting}
+        disabled={isPrinting || disabled}
         className="w-full flex items-center justify-center gap-3 px-6 py-3 font-bold text-white bg-cyan-600 rounded-lg shadow-lg hover:bg-cyan-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-cyan-500 transition-all duration-300 disabled:bg-slate-600 disabled:cursor-not-allowed"
       >
         {isPrinting ? (

@@ -53,10 +53,10 @@ const App: React.FC = () => {
             city: '',
             phone: '',
             date: new Date().toLocaleDateString('id-ID'),
-            transactionId: `TRX-${Date.now().toString().slice(-6)}`,
+            transactionId: `BL-${Date.now().toString().slice(-6)}`,
             tableNumber: '',
             customerName: '',
-            footerMessage: 'Thank you for your visit!',
+            footerMessage: 'Terimakasih atas kunjungan Anda',
             ...parsedData,
             paymentType: 'Tunai', // Default payment type
         };
@@ -119,7 +119,7 @@ const App: React.FC = () => {
         tax: 0,
         total: 0,
         date: new Date().toLocaleDateString('id-ID'),
-        transactionId: `TRX-${Date.now().toString().slice(-6)}`,
+        transactionId: `BL-${Date.now().toString().slice(-6)}`,
         paymentType: 'Tunai',
     };
       

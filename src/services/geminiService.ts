@@ -1,7 +1,8 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { ReceiptData } from '../types';
 
-const API_KEY = import.meta.env.VITE_API_KEY;
+// FIX: Switched from import.meta.env.VITE_API_KEY to process.env.API_KEY to follow guidelines.
+const API_KEY = process.env.API_KEY;
 
 export const isApiKeySet = !!API_KEY;
 
@@ -76,7 +77,8 @@ const responseSchema = {
 export const parseReceipt = async (base64Image: string, mimeType: string): Promise<ReceiptData> => {
     
     if (!ai) {
-        throw new Error("Gemini API client is not initialized. Please set VITE_API_KEY.");
+        // FIX: Updated error message to reflect use of API_KEY env var.
+        throw new Error("Gemini API client is not initialized. Please set API_KEY.");
     }
     
     const imagePart = {

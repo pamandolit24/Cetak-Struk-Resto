@@ -54,10 +54,10 @@ const App: React.FC = () => {
             city: '',
             phone: '',
             date: new Date().toLocaleDateString('id-ID'),
-            transactionId: `TRX-${Date.now().toString().slice(-6)}`,
+            transactionId: `BL-${Math.floor(100000 + Math.random() * 900000)}`,
             tableNumber: '',
             customerName: '',
-            footerMessage: 'Thank you for your visit!',
+            footerMessage: 'Terimakasih atas kunjungan Anda',
             ...parsedData,
             paymentType: 'Tunai', // Default payment type
         };
@@ -120,7 +120,7 @@ const App: React.FC = () => {
         tax: 0,
         total: 0,
         date: new Date().toLocaleDateString('id-ID'),
-        transactionId: `TRX-${Date.now().toString().slice(-6)}`,
+        transactionId: `BL-${Math.floor(100000 + Math.random() * 900000)}`,
         paymentType: 'Tunai',
     };
       
@@ -187,7 +187,8 @@ const App: React.FC = () => {
             The AI service is not configured correctly. The application cannot function without a valid API key.
           </p>
           <p className="mt-2 text-slate-400 text-sm">
-            If you are the administrator, please set the <code className="bg-slate-700 p-1 rounded">VITE_API_KEY</code> environment variable in your Vercel project settings and redeploy the application.
+            {/* FIX: Updated environment variable name to API_KEY to align with guidelines. */}
+            If you are the administrator, please set the <code className="bg-slate-700 p-1 rounded">API_KEY</code> environment variable in your Vercel project settings and redeploy the application.
           </p>
         </div>
       </div>

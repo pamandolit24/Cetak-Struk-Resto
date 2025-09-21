@@ -103,7 +103,7 @@ const ReceiptEditor: React.FC<ReceiptEditorProps> = ({ receiptData, onDataChange
   return (
     <div className="bg-slate-800/50 rounded-xl shadow-lg h-full flex flex-col">
       <div className="p-6 border-b border-slate-700">
-        <h2 className="text-2xl font-semibold text-slate-300 flex items-center gap-2">
+        <h2 className="text-xl sm:text-2xl font-semibold text-slate-300 flex items-center gap-2">
             <EditIcon className="w-6 h-6 text-cyan-400" />
             2. Edit & Print Bill
         </h2>
@@ -171,14 +171,14 @@ const ReceiptEditor: React.FC<ReceiptEditorProps> = ({ receiptData, onDataChange
 
                 <div className="border-t border-slate-700"></div>
 
-                <div className="grid grid-cols-[1fr_4rem_6rem_6rem_2.5rem] gap-2 font-semibold text-slate-400 text-sm px-2">
+                <div className="hidden md:grid md:grid-cols-[1fr_4rem_6rem_6rem_2.5rem] gap-2 font-semibold text-slate-400 text-sm px-2">
                     <span>Item</span>
                     <span className="text-right">Qty</span>
                     <span className="text-right">Unit Price</span>
                     <span className="text-right">Total</span>
                     <span></span>
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-3">
                 {internalData.items.map((item, index) => (
                     <ReceiptItemRow 
                         key={index} 

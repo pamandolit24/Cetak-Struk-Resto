@@ -1,3 +1,4 @@
+
 import React, { useRef, useState } from 'react';
 import { UploadIcon, LoadingSpinnerIcon } from './icons';
 
@@ -60,12 +61,12 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUpload, isLoading,
       />
       
       {isLoading ? (
-        <div className="flex flex-col items-center justify-center h-64 text-slate-400">
+        <div className="flex flex-col items-center justify-center h-56 sm:h-64 text-slate-400">
             <LoadingSpinnerIcon className="w-12 h-12" />
             <p className="mt-4 text-lg">Parsing receipt with AI...</p>
         </div>
       ) : uploadedImage ? (
-        <div className="relative h-96">
+        <div className="relative h-72 sm:h-96">
           <img src={uploadedImage} alt="Uploaded Receipt" className="object-contain w-full h-full rounded-lg" />
           <button
             onClick={handleClick}
@@ -79,11 +80,11 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUpload, isLoading,
         </div>
       ) : (
         <div
-          className="flex flex-col items-center justify-center h-64 cursor-pointer"
+          className="flex flex-col items-center justify-center h-56 sm:h-64 cursor-pointer"
           onClick={handleClick}
         >
           <UploadIcon className="w-12 h-12 text-slate-500 group-hover:text-cyan-400 transition-colors" />
-          <p className="mt-4 text-slate-400">
+          <p className="mt-4 text-slate-400 text-center">
             <span className="font-semibold text-cyan-400">Click to upload</span> or drag and drop
           </p>
           <p className="text-xs text-slate-500 mt-1">PNG, JPG, or WEBP</p>

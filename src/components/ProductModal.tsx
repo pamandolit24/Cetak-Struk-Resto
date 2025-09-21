@@ -79,7 +79,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, products, 
                     )}
                 </div>
                  <footer className="p-4 bg-slate-900/50 border-t border-slate-700 rounded-b-2xl flex-shrink-0">
-                    <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} className="grid grid-cols-1 sm:grid-cols-[1fr_8rem_auto] gap-3 items-end">
+                    <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_8rem_auto] sm:gap-3 items-end">
                         <div>
                              <label htmlFor="productName" className="block text-xs font-medium text-slate-400 mb-1">Product Name</label>
                              <input

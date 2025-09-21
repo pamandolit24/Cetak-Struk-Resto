@@ -8,6 +8,7 @@ import LoadReceiptModal from './components/LoadReceiptModal';
 import LoadTemplateModal from './components/LoadTemplateModal';
 import SaveTemplateModal from './components/SaveTemplateModal';
 import ProductModal from './components/ProductModal';
+import RotationPrompt from './components/RotationPrompt';
 import { ReceiptIcon, ZapIcon, FolderIcon } from './components/icons';
 
 const App: React.FC = () => {
@@ -195,6 +196,7 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100 font-sans">
+      <RotationPrompt />
       <header className="bg-slate-900/70 backdrop-blur-lg border-b border-slate-700 sticky top-0 z-10">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col gap-3 py-4 sm:flex-row sm:justify-between sm:items-center sm:h-16 sm:py-0">
